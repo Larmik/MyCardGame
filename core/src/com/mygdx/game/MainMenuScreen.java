@@ -15,7 +15,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class MainMenuScreen implements Screen {
 
-    Texture background, logogame, button;
+    Texture background, logogame;
     Image backgroundImg, logoImg;
     boolean isTouched = false;
     int logoX, logoY, buttonX, buttonY, screenHeight, screenWidth;
@@ -81,7 +81,7 @@ public class MainMenuScreen implements Screen {
 
         background = new Texture(Gdx.files.local("assets/background.jpg"));
         logogame = new Texture(Gdx.files.local("assets/logogame.png"));
-        button = new Texture(Gdx.files.local("assets/button.png"));
+
 
         backgroundImg = new Image(background);
         logoImg = new Image(logogame);
@@ -89,7 +89,7 @@ public class MainMenuScreen implements Screen {
         logoX = screenWidth / 2 - logogame.getWidth() * 2;
         logoY = screenHeight - (logogame.getHeight() * 2);
         buttonX = screenWidth - screenWidth / 3 - screenWidth / 20;
-        buttonY = Math.round(screenHeight - button.getHeight());
+        buttonY = Math.round(screenHeight - screenHeight/4);
 
         backgroundImg.setSize(screenWidth, screenHeight);
         logoImg.setSize(logogame.getWidth() * 2, logogame.getHeight() * 2);
