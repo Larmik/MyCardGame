@@ -28,8 +28,8 @@ public class GameScreen implements Screen {
     private Texture cardBackground, backCard;
     private Image deckImg;
     private List<Image> cardImagesPlayer, whiteBackgroundImages, cardImagesIA1, cardImagesIA2, deckImgs;
-    private int screenHeight, screenWidth, cardHeight, cardWidth, firstPlayerCardX, firstPlayerCardY, firstIA1CardY, selectedCard, score;
-    private boolean isAs11 = false, isPlusDix = false, playerBegins = true, reverse = false;
+    private int screenHeight, screenWidth, cardHeight, cardWidth, firstPlayerCardX, firstPlayerCardY, firstIA1CardY, selectedCard, score, playerTurn = 0;
+    private boolean isAs11 = false, isPlusDix = false, reverse = false;
     private Stage stage;
     private BitmapFont fontScore, fontDeck;
     private TextButton playCardButton, dixPlus, dixMoins, as1, as11;
@@ -46,78 +46,8 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        InputMultiplexer multiInput = new InputMultiplexer();
-        multiInput.addProcessor(new InputProcessor() {
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int boutton) {
-                if (screenX >= firstPlayerCardX && screenX <= firstPlayerCardX + cardWidth && screenY < screenHeight && screenY >= screenHeight - cardHeight / 2) {
-                    selectedCard = 1;
-                    playCardButton.setVisible(true);
-                } else if (screenX > firstPlayerCardX + cardWidth && screenX <= firstPlayerCardX + cardWidth * 2 && screenY < screenHeight && screenY >= screenHeight - cardHeight / 2) {
-                    selectedCard = 2;
-                    playCardButton.setVisible(true);
-                } else if (screenX > firstPlayerCardX + cardWidth * 2 && screenX <= firstPlayerCardX + cardWidth * 3 && screenY < screenHeight && screenY >= screenHeight - cardHeight / 2) {
-                    selectedCard = 3;
-                    playCardButton.setVisible(true);
-                } else
-                    return false;
-                if (Card.isTen(playerGame.get(selectedCard - 1)) && score > 10 && score < 41) {
-                    playCardButton.setVisible(false);
-                    dixMoins.setVisible(true);
-                    dixPlus.setVisible(true);
-                } else {
-                    dixMoins.setVisible(false);
-                    dixPlus.setVisible(false);
-                }
-                if (Card.isAce(playerGame.get(selectedCard - 1)) && score < 40) {
-                    playCardButton.setVisible(false);
-                    as11.setVisible(true);
-                    as1.setVisible(true);
-                } else {
-                    as1.setVisible(false);
-                    as11.setVisible(false);
-                }
-                return false;
-            }
-
-            @Override
-            public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-                return false;
-            }
-
-            @Override
-            public boolean touchDragged(int screenX, int screenY, int pointer) {
-                return false;
-            }
-
-            @Override
-            public boolean mouseMoved(int screenX, int screenY) {
-                return false;
-            }
-
-            @Override
-            public boolean scrolled(int amount) {
-                return false;
-            }
-
-            @Override
-            public boolean keyDown(int keycode) {
-                return false;
-            }
-
-            @Override
-            public boolean keyUp(int keycode) {
-                return false;
-            }
-
-            @Override
-            public boolean keyTyped(char character) {
-                return false;
-            }
-
-        });
-        multiInput.addProcessor(stage);
-        Gdx.input.setInputProcessor(multiInput);
+        if (playerTurn == 0)
+            setInputProcessor();
         displaySelectedCard();
         Timer.schedule(new Timer.Task() {
             @Override
@@ -249,12 +179,10 @@ public class GameScreen implements Screen {
                     break;
             }
             stage.addActor(nextCardImg);
-
-
-
     }
 
     private void resetSelection() {
+        Gdx.input.setInputProcessor(null);
         selectedCard = 0;
         playCardButton.setVisible(false);
         dixPlus.setVisible(false);
@@ -333,23 +261,56 @@ public class GameScreen implements Screen {
             cardImagesPlayer.get(cardImagesPlayer.size() - 1).setVisible(false);
             whiteBackgroundImages.get(cardImagesPlayer.size() - 1).setVisible(false);
         }
-        if (!ia1Game.isEmpty()) {
-            Timer.schedule(new Timer.Task() {
-                @Override
-                public void run() {
-                        playIA(1, cardImagesIA1, ia1Game);
+
+        if (!reverse) {
+            if (!ia1Game.isEmpty()) {
+                updatePlayerTurn();
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        playIA(playerTurn, cardImagesIA1, ia1Game);
                         if (!ia2Game.isEmpty()) {
                             Timer.schedule(new Timer.Task() {
                                 @Override
                                 public void run() {
-                                    playIA(2, cardImagesIA2, ia2Game);
+                                    playIA(playerTurn, cardImagesIA2, ia2Game);
                                 }
                             }, 1f);
+                            if (reverse && playerTurn == 2 && !ia1Game.isEmpty()) {
+                                Timer.schedule(new Timer.Task() {
+                                    @Override
+                                    public void run() {
+                                        playIA(playerTurn, cardImagesIA1, ia1Game);
+                                    }
+                                }, 1f);
+                            }
                         }
 
-                }
-            }, 1f);
+                    }
+                }, 1f);
+            }
+        } else {
+            if (!ia2Game.isEmpty()) {
+                updatePlayerTurn();
+                Timer.schedule(new Timer.Task() {
+                    @Override
+                    public void run() {
+                        playIA(playerTurn, cardImagesIA2, ia2Game);
+                        if (!ia1Game.isEmpty()) {
+                            Timer.schedule(new Timer.Task() {
+                                @Override
+                                public void run() {
+                                    playIA(playerTurn, cardImagesIA1, ia1Game);
+                                }
+                            }, 1f);
+
+                        }
+
+                    }
+                }, 1f);
+            }
         }
+
     }
 
     private void pickPlayer() {
@@ -431,7 +392,7 @@ public class GameScreen implements Screen {
                 deckImgs.get(0).toBack();
                 if (deck.size() == 0) {
                     deckImg.setVisible(false);
-                } else {
+                } else if (playerTurn != 0){
                     Timer.schedule(new Timer.Task() {
                         @Override
                         public void run() {
@@ -455,9 +416,12 @@ public class GameScreen implements Screen {
         if (!cardGame.isEmpty())
             cardImages.get(cardGame.size()-1).setVisible(false);
         cardImages.get(cardImages.size()-1).setVisible(false);
+
+
     }
 
     private void pickIA(final int which, final List<Image> cardImages) {
+        updatePlayerTurn();
         createNextCardImage();
         switch (which) {
             case 1:
@@ -488,6 +452,7 @@ public class GameScreen implements Screen {
         if (deck.size() != 0) {
             deck.remove(0);
         }
+
     }
 
     private void displaySelectedCard() {
@@ -719,7 +684,7 @@ public class GameScreen implements Screen {
                 }
             }
         }
-        if (!playerBegins) {
+        if (playerTurn != 0) {
             playIA(1, cardImagesIA1, ia1Game);
             Timer.schedule(new Timer.Task() {
                 @Override
@@ -738,6 +703,97 @@ public class GameScreen implements Screen {
                 }
             }, 0.7f);
         }
+        setInputProcessor();
+    }
+
+    private void setInputProcessor() {
+        InputMultiplexer multiInput = new InputMultiplexer();
+        multiInput.addProcessor(new InputProcessor() {
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int boutton) {
+                if (screenX >= firstPlayerCardX && screenX <= firstPlayerCardX + cardWidth && screenY < screenHeight && screenY >= screenHeight - cardHeight / 2) {
+                    selectedCard = 1;
+                    playCardButton.setVisible(true);
+                } else if (screenX > firstPlayerCardX + cardWidth && screenX <= firstPlayerCardX + cardWidth * 2 && screenY < screenHeight && screenY >= screenHeight - cardHeight / 2) {
+                    selectedCard = 2;
+                    playCardButton.setVisible(true);
+                } else if (screenX > firstPlayerCardX + cardWidth * 2 && screenX <= firstPlayerCardX + cardWidth * 3 && screenY < screenHeight && screenY >= screenHeight - cardHeight / 2) {
+                    selectedCard = 3;
+                    playCardButton.setVisible(true);
+                } else
+                    return false;
+                if (Card.isTen(playerGame.get(selectedCard - 1)) && score > 10 && score < 41) {
+                    playCardButton.setVisible(false);
+                    dixMoins.setVisible(true);
+                    dixPlus.setVisible(true);
+                } else {
+                    dixMoins.setVisible(false);
+                    dixPlus.setVisible(false);
+                }
+                if (Card.isAce(playerGame.get(selectedCard - 1)) && score < 40) {
+                    playCardButton.setVisible(false);
+                    as11.setVisible(true);
+                    as1.setVisible(true);
+                } else {
+                    as1.setVisible(false);
+                    as11.setVisible(false);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+                return false;
+            }
+
+            @Override
+            public boolean touchDragged(int screenX, int screenY, int pointer) {
+                return false;
+            }
+
+            @Override
+            public boolean mouseMoved(int screenX, int screenY) {
+                return false;
+            }
+
+            @Override
+            public boolean scrolled(int amount) {
+                return false;
+            }
+
+            @Override
+            public boolean keyDown(int keycode) {
+                return false;
+            }
+
+            @Override
+            public boolean keyUp(int keycode) {
+                return false;
+            }
+
+            @Override
+            public boolean keyTyped(char character) {
+                return false;
+            }
+
+        });
+        multiInput.addProcessor(stage);
+        Gdx.input.setInputProcessor(multiInput);
+    }
+
+    private void updatePlayerTurn() {
+        if (!reverse) {
+            if (playerTurn == NUMBER_OF_PLAYERS)
+                playerTurn = 0;
+             else
+                playerTurn++;
+        } else {
+            if (playerTurn == 0)
+                playerTurn = NUMBER_OF_PLAYERS;
+            else
+                playerTurn--;
+        }
+
     }
 
 }

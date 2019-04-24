@@ -96,8 +96,4 @@ public enum  Card {
         return card.getAsset().contains("ace");
     }
 
-
-
-
-
 }
