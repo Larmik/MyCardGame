@@ -22,7 +22,7 @@ import java.util.List;
 
 public class GameScreen implements Screen {
 
-    private static int NUMBER_OF_PLAYERS = 2;
+    private int numberOfPlayers;
 
     private MyGame game;
     private Texture cardBackground, backCard;
@@ -35,8 +35,9 @@ public class GameScreen implements Screen {
     private TextButton playCardButton, dixPlus, dixMoins, as1, as11;
     private List<Card> deck, playerGame, ia1Game, ia2Game;
 
-    GameScreen(MyGame game) {
+    GameScreen(MyGame game, int numberOfPlayers) {
         this.game = game;
+        this.numberOfPlayers = numberOfPlayers;
     }
 
     @Override
@@ -53,7 +54,7 @@ public class GameScreen implements Screen {
             @Override
             public void run() {
                 if (deck.size() == 0 && ia1Game.size() == 0 && playerGame.size() == 0)
-                    game.setScreen(new ResultScreen(game, false, true));
+                    game.setScreen(new ResultScreen(game, false, true, numberOfPlayers));
             }
         }, 1f);
         stage.act();
@@ -201,7 +202,8 @@ public class GameScreen implements Screen {
     private void calculateScore(CardValue value, boolean isPlusDix, boolean isAs1) {
         switch (value) {
             case SEPT:
-                reverse = !reverse;
+                if (numberOfPlayers == 2)
+                    reverse = !reverse;
                 break;
             case NEUF:
                 break;
@@ -273,17 +275,21 @@ public class GameScreen implements Screen {
                             Timer.schedule(new Timer.Task() {
                                 @Override
                                 public void run() {
-                                    playIA(playerTurn, cardImagesIA2, ia2Game);
+                                    if (playerTurn != 0) {
+                                        playIA(playerTurn, cardImagesIA2, ia2Game);
+                                        if (reverse && playerTurn == 2 && !ia1Game.isEmpty()) {
+                                            Timer.schedule(new Timer.Task() {
+                                                @Override
+                                                public void run() {
+                                                    playIA(playerTurn, cardImagesIA1, ia1Game);
+                                                }
+                                            }, 1f);
+                                        }
+                                    }
+
                                 }
                             }, 1f);
-                            if (reverse && playerTurn == 2 && !ia1Game.isEmpty()) {
-                                Timer.schedule(new Timer.Task() {
-                                    @Override
-                                    public void run() {
-                                        playIA(playerTurn, cardImagesIA1, ia1Game);
-                                    }
-                                }, 1f);
-                            }
+
                         }
 
                     }
@@ -300,9 +306,21 @@ public class GameScreen implements Screen {
                             Timer.schedule(new Timer.Task() {
                                 @Override
                                 public void run() {
-                                    playIA(playerTurn, cardImagesIA1, ia1Game);
+                                    if (playerTurn != 0) {
+                                        playIA(playerTurn, cardImagesIA1, ia1Game);
+                                        if (!reverse && playerTurn == 1 && !ia2Game.isEmpty()) {
+                                            Timer.schedule(new Timer.Task() {
+                                                @Override
+                                                public void run() {
+                                                    playIA(playerTurn, cardImagesIA2, ia2Game);
+                                                }
+                                            }, 1f);
+                                        }
+                                    }
+
                                 }
                             }, 1f);
+
 
                         }
 
@@ -340,9 +358,10 @@ public class GameScreen implements Screen {
 
     private void playIA(final int whitch, final List<Image> cardImages, List<Card> cardGame) {
         if (getPlayedIACard(cardGame) == null)
-            game.setScreen(new ResultScreen(game, true, false));
+            game.setScreen(new ResultScreen(game, true, false, numberOfPlayers));
         if (cardGame.isEmpty())
-            game.setScreen(new ResultScreen(game, false, true ));
+            game.setScreen(new ResultScreen(game, false, true, numberOfPlayers));
+
         Image backCardImg = new Image(backCard);
         final Image nextCardImg = new Image(new Texture(Gdx.files.local(getPlayedIACard(cardGame).getAsset())));
         final Image backImg = new Image(cardBackground);
@@ -380,7 +399,7 @@ public class GameScreen implements Screen {
 
         nextCardImg.setVisible(false);
         backImg.setVisible(false);
-        createIACardImage(2, getSelectedIACard(cardGame), whitch);
+        createIACardImage(2, getSelectedIACard(cardGame), playerTurn);
 
         Timer.schedule(new Timer.Task() {
             @Override
@@ -392,6 +411,7 @@ public class GameScreen implements Screen {
                 deckImgs.get(0).toBack();
                 if (deck.size() == 0) {
                     deckImg.setVisible(false);
+                    updatePlayerTurn();
                 } else if (playerTurn != 0){
                     Timer.schedule(new Timer.Task() {
                         @Override
@@ -404,8 +424,8 @@ public class GameScreen implements Screen {
                 Timer.schedule(new Timer.Task() {
                     @Override
                     public void run() {
-                        if (whitch == NUMBER_OF_PLAYERS && getPlayedIACard(playerGame) == null && !playerGame.isEmpty())
-                            game.setScreen(new ResultScreen(game, false, false));
+                        if (whitch == numberOfPlayers && getPlayedIACard(playerGame) == null && !playerGame.isEmpty())
+                            game.setScreen(new ResultScreen(game, false, false, numberOfPlayers));
 
                     }
                 }, 0.6f);
@@ -416,7 +436,6 @@ public class GameScreen implements Screen {
         if (!cardGame.isEmpty())
             cardImages.get(cardGame.size()-1).setVisible(false);
         cardImages.get(cardImages.size()-1).setVisible(false);
-
 
     }
 
@@ -677,7 +696,7 @@ public class GameScreen implements Screen {
             if (deck.size() != 0) {
                 deck.remove(0);
             }
-            for (int j = 1; j <= NUMBER_OF_PLAYERS; j++) {
+            for (int j = 1; j <= numberOfPlayers; j++) {
                 createIACardImage(i, deck.get(0), j);
                 if (deck.size() != 0) {
                     deck.remove(0);
@@ -783,13 +802,13 @@ public class GameScreen implements Screen {
 
     private void updatePlayerTurn() {
         if (!reverse) {
-            if (playerTurn == NUMBER_OF_PLAYERS)
+            if (playerTurn == numberOfPlayers)
                 playerTurn = 0;
              else
                 playerTurn++;
         } else {
             if (playerTurn == 0)
-                playerTurn = NUMBER_OF_PLAYERS;
+                playerTurn = numberOfPlayers;
             else
                 playerTurn--;
         }

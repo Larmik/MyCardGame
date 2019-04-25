@@ -96,4 +96,8 @@ public enum  Card {
         return card.getAsset().contains("ace");
     }
 
+    static boolean isSeven(Card card) {
+        return card.getAsset().contains("7");
+    }
+
 }

@@ -5,7 +5,6 @@ import com.badlogic.gdx.Game;
 public class MyGame extends Game {
 
     MainMenuScreen mainMenuScreen;
-    GameScreen gameScreen;
     public static MyGame instance;
 
     public static MyGame getInstance() {
@@ -18,7 +17,6 @@ public class MyGame extends Game {
     @Override
     public void create() {
         mainMenuScreen = new MainMenuScreen(this);
-        gameScreen = new GameScreen(this);
         setScreen(mainMenuScreen);
     }
 }

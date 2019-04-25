@@ -20,11 +20,13 @@ public class ResultScreen implements Screen {
     Stage stage;
     TextButton newGameBtn;
     boolean win, draw;
+    int numberOfPlayers;
 
-    ResultScreen(MyGame game, boolean win, boolean draw) {
+    ResultScreen(MyGame game, boolean win, boolean draw, int numberOfPlayers) {
         this.game = game;
         this.win = win;
         this.draw = draw;
+        this.numberOfPlayers = numberOfPlayers;
     }
 
     @Override
@@ -52,7 +54,7 @@ public class ResultScreen implements Screen {
 
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                game.setScreen(new GameScreen(game));
+                game.setScreen(new GameScreen(game, numberOfPlayers));
                 return false;
             }
         });

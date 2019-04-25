@@ -19,7 +19,7 @@ public class MainMenuScreen implements Screen {
     Image backgroundImg, logoImg;
     boolean isTouched = false;
     int logoX, logoY, buttonX, buttonY, screenHeight, screenWidth;
-    Button playButton;
+    Button playButton, onePlayerButton, twoPlayersButton;
     Skin skin;
     Stage stage;
 
@@ -40,9 +40,7 @@ public class MainMenuScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
         stage.act();
         stage.draw();
-        if (isTouched) {
-            game.setScreen(new GameScreen(game));
-        }
+
     }
 
     @Override
@@ -76,7 +74,8 @@ public class MainMenuScreen implements Screen {
 
         skin = new Skin(Gdx.files.internal("skins/neon-ui.json"));
         playButton = new TextButton("Nouvelle partie", skin);
-
+        onePlayerButton = new TextButton("1 adversaire", skin);
+        twoPlayersButton = new TextButton("2 adversaires", skin);
         stage = new Stage(new ScreenViewport());
 
         background = new Texture(Gdx.files.local("assets/background.jpg"));
@@ -94,23 +93,55 @@ public class MainMenuScreen implements Screen {
         backgroundImg.setSize(screenWidth, screenHeight);
         logoImg.setSize(logogame.getWidth() * 2, logogame.getHeight() * 2);
         playButton.setSize(screenWidth/6, screenHeight/6);
+        onePlayerButton.setSize(screenWidth/8, screenHeight/8);
+        twoPlayersButton.setSize(screenWidth/8, screenHeight/8);
+
+        onePlayerButton.setVisible(false);
+        twoPlayersButton.setVisible(false);
 
         backgroundImg.setPosition(0, 0);
         logoImg.setPosition(logoX, logoY);
         playButton.setPosition(buttonX, buttonY);
+        onePlayerButton.setPosition(buttonX, buttonY - screenHeight/6);
+        twoPlayersButton.setPosition(buttonX + screenWidth/6, buttonY - screenHeight/6);
         ((TextButton)playButton).getLabel().setFontScale(2.5f, 2.5f);
+        ((TextButton)onePlayerButton).getLabel().setFontScale(2.5f, 2.5f);
+        ((TextButton)twoPlayersButton).getLabel().setFontScale(2.5f, 2.5f);
         playButton.addListener(new InputListener() {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
             }
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                isTouched = true;
+                onePlayerButton.setVisible(true);
+                twoPlayersButton.setVisible(true);
+                return false;
+            }
+        });
+        onePlayerButton.addListener(new InputListener() {
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+            }
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+               game.setScreen(new GameScreen(game, 1));
+                return false;
+            }
+        });
+        twoPlayersButton.addListener(new InputListener() {
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+            }
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+               game.setScreen(new GameScreen(game, 2));
                 return false;
             }
         });
         stage.addActor(backgroundImg);
         stage.addActor(logoImg);
         stage.addActor(playButton);
+        stage.addActor(onePlayerButton);
+        stage.addActor(twoPlayersButton);
     }
 }
