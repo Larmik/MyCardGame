@@ -22,13 +22,11 @@ import java.util.List;
 
 public class GameScreen implements Screen {
 
-    private int numberOfPlayers;
-
     private MyGame game;
     private Texture cardBackground, backCard;
     private Image deckImg;
     private List<Image> cardImagesPlayer, whiteBackgroundImages, cardImagesIA1, cardImagesIA2, deckImgs;
-    private int screenHeight, screenWidth, cardHeight, cardWidth, firstPlayerCardX, firstPlayerCardY, firstIA1CardY, selectedCard, score, playerTurn = 0;
+    private int screenHeight, screenWidth, cardHeight, cardWidth, firstPlayerCardX, firstPlayerCardY, firstIA1CardY, selectedCard, score, playerTurn = 0, numberOfPlayers;
     private boolean isAs11 = false, isPlusDix = false, reverse = false;
     private Stage stage;
     private BitmapFont fontScore, fontDeck;
@@ -64,23 +62,19 @@ public class GameScreen implements Screen {
         fontDeck.getData().setScale(1.2f);
         fontScore.draw(stage.getBatch(), "Score: " + String.valueOf(score), firstPlayerCardX + cardWidth - cardWidth / 4, screenHeight / 2 - cardWidth / 2);
         fontDeck.draw(stage.getBatch(), "Restantes: " + String.valueOf(deck.size()), firstPlayerCardX, screenHeight - cardWidth + 50);
-
         stage.getBatch().end();
     }
 
     @Override
     public void resize(int width, int height) {
-
     }
 
     @Override
     public void pause() {
-
     }
 
     @Override
     public void resume() {
-
     }
 
     @Override
@@ -88,8 +82,6 @@ public class GameScreen implements Screen {
         stage.dispose();
         fontScore.dispose();
         fontDeck.dispose();
-
-
     }
 
     @Override
@@ -249,7 +241,6 @@ public class GameScreen implements Screen {
                 }
             }, 0.7f);
         }
-
         cardImagesPlayer.remove(cardImagesPlayer.get(selectedCard - 1));
         whiteBackgroundImages.remove(whiteBackgroundImages.get(selectedCard - 1));
         playerGame.remove(playerGame.get(selectedCard - 1));
@@ -258,12 +249,10 @@ public class GameScreen implements Screen {
             whiteBackgroundImages.add(deckImg);
             cardImagesPlayer.get(2).setVisible(false);
             whiteBackgroundImages.get(2).setVisible(false);
-
         } else {
             cardImagesPlayer.get(cardImagesPlayer.size() - 1).setVisible(false);
             whiteBackgroundImages.get(cardImagesPlayer.size() - 1).setVisible(false);
         }
-
         if (!reverse) {
             if (!ia1Game.isEmpty()) {
                 updatePlayerTurn();
@@ -282,16 +271,21 @@ public class GameScreen implements Screen {
                                                 @Override
                                                 public void run() {
                                                     playIA(playerTurn, cardImagesIA1, ia1Game);
+                                                    if (!reverse && playerTurn == 1 && !ia2Game.isEmpty()) {
+                                                        Timer.schedule(new Timer.Task() {
+                                                            @Override
+                                                            public void run() {
+                                                                playIA(playerTurn, cardImagesIA2, ia2Game);
+                                                            }
+                                                        }, 1f);
+                                                    }
                                                 }
                                             }, 1f);
                                         }
                                     }
-
                                 }
                             }, 1f);
-
                         }
-
                     }
                 }, 1f);
             }
@@ -313,22 +307,25 @@ public class GameScreen implements Screen {
                                                 @Override
                                                 public void run() {
                                                     playIA(playerTurn, cardImagesIA2, ia2Game);
+                                                    if (reverse && playerTurn == 2 && !ia1Game.isEmpty()) {
+                                                        Timer.schedule(new Timer.Task() {
+                                                            @Override
+                                                            public void run() {
+                                                                playIA(playerTurn, cardImagesIA1, ia1Game);
+                                                            }
+                                                        }, 1f);
+                                                    }
                                                 }
                                             }, 1f);
                                         }
                                     }
-
                                 }
                             }, 1f);
-
-
                         }
-
                     }
                 }, 1f);
             }
         }
-
     }
 
     private void pickPlayer() {
@@ -347,10 +344,8 @@ public class GameScreen implements Screen {
                 if (deck.size() == 0) {
                     deckImg.setVisible(false);
                 }
-
             }
         }, 0.1f);
-
         if (deck.size() != 0) {
             deck.remove(0);
         }
@@ -361,7 +356,6 @@ public class GameScreen implements Screen {
             game.setScreen(new ResultScreen(game, true, false, numberOfPlayers));
         if (cardGame.isEmpty())
             game.setScreen(new ResultScreen(game, false, true, numberOfPlayers));
-
         Image backCardImg = new Image(backCard);
         final Image nextCardImg = new Image(new Texture(Gdx.files.local(getPlayedIACard(cardGame).getAsset())));
         final Image backImg = new Image(cardBackground);
@@ -372,14 +366,11 @@ public class GameScreen implements Screen {
             calculateScore(CardValue.AS, false, score > 39);
         } else
             calculateScore(Card.getCardValue(card.getAsset()), false, false);
-
         backCardImg.setSize(cardWidth, cardHeight);
         nextCardImg.setSize(cardWidth, cardHeight);
         backImg.setSize(cardWidth, cardHeight);
-
         backImg.setPosition(firstPlayerCardX + cardWidth * 2, screenHeight - (cardHeight + cardWidth));
         nextCardImg.setPosition(firstPlayerCardX + cardWidth * 2, screenHeight - (cardHeight + cardWidth));
-
         switch (whitch) {
             case 1:
                 backCardImg.setPosition(-cardHeight / 2, firstIA1CardY + cardWidth);
@@ -391,16 +382,13 @@ public class GameScreen implements Screen {
                 backCardImg.setPosition(firstPlayerCardX + cardWidth, screenHeight + firstPlayerCardY);
                 break;
         }
-
         backCardImg.addAction(Actions.moveTo(firstPlayerCardX + cardWidth * 2, screenHeight - (cardHeight + cardWidth), 20, new Interpolation.ExpOut(5, 200)));
         stage.addActor(backCardImg);
         stage.addActor(backImg);
         stage.addActor(nextCardImg);
-
         nextCardImg.setVisible(false);
         backImg.setVisible(false);
         createIACardImage(2, getSelectedIACard(cardGame), playerTurn);
-
         Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
@@ -420,7 +408,6 @@ public class GameScreen implements Screen {
                         }
                     }, 0.7f);
                 }
-
                 Timer.schedule(new Timer.Task() {
                     @Override
                     public void run() {
@@ -436,7 +423,6 @@ public class GameScreen implements Screen {
         if (!cardGame.isEmpty())
             cardImages.get(cardGame.size()-1).setVisible(false);
         cardImages.get(cardImages.size()-1).setVisible(false);
-
     }
 
     private void pickIA(final int which, final List<Image> cardImages) {
@@ -471,7 +457,6 @@ public class GameScreen implements Screen {
         if (deck.size() != 0) {
             deck.remove(0);
         }
-
     }
 
     private void displaySelectedCard() {
@@ -482,7 +467,6 @@ public class GameScreen implements Screen {
             cardImagesPlayer.get(0).addAction(Actions.moveTo(firstPlayerCardX, firstPlayerCardY));
             whiteBackgroundImages.get(0).addAction(Actions.moveTo(firstPlayerCardX, firstPlayerCardY));
         }
-
         if (selectedCard == 2) {
             cardImagesPlayer.get(1).addAction(Actions.moveTo(firstPlayerCardX + cardWidth, firstPlayerCardY + 50));
             whiteBackgroundImages.get(1).addAction(Actions.moveTo(firstPlayerCardX + cardWidth, firstPlayerCardY + 50));
@@ -490,7 +474,6 @@ public class GameScreen implements Screen {
             cardImagesPlayer.get(1).addAction(Actions.moveTo(firstPlayerCardX + cardWidth, firstPlayerCardY));
             whiteBackgroundImages.get(1).addAction(Actions.moveTo(firstPlayerCardX + cardWidth, firstPlayerCardY));
         }
-
         if (selectedCard == 3) {
             cardImagesPlayer.get(2).addAction(Actions.moveTo(firstPlayerCardX + cardWidth * 2, firstPlayerCardY + 50));
             whiteBackgroundImages.get(2).addAction(Actions.moveTo(firstPlayerCardX + cardWidth * 2, firstPlayerCardY + 50));
@@ -514,7 +497,6 @@ public class GameScreen implements Screen {
             if (CardSelectionUtil.getPriority(card, score, score < 41, score > 40).getValue() < priority) {
                 priority = CardSelectionUtil.getPriority(card, score, score < 41, score > 40).getValue();
                 returnedCard = card;
-
             }
         }
         return returnedCard;
@@ -585,7 +567,6 @@ public class GameScreen implements Screen {
         playCardButton.addListener(new InputListener() {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-
             }
 
             @Override
@@ -625,7 +606,6 @@ public class GameScreen implements Screen {
         dixMoins.addListener(new InputListener() {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-
             }
 
             @Override
@@ -640,7 +620,6 @@ public class GameScreen implements Screen {
         dixPlus.addListener(new InputListener() {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-
             }
 
             @Override
@@ -655,7 +634,6 @@ public class GameScreen implements Screen {
         as1.addListener(new InputListener() {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-
             }
 
             @Override
@@ -670,7 +648,6 @@ public class GameScreen implements Screen {
         as11.addListener(new InputListener() {
             @Override
             public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-
             }
 
             @Override
@@ -718,7 +695,6 @@ public class GameScreen implements Screen {
                             }
                         }, 0.7f);
                     }
-
                 }
             }, 0.7f);
         }
@@ -814,5 +790,4 @@ public class GameScreen implements Screen {
         }
 
     }
-
 }
